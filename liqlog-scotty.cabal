@@ -1,0 +1,21 @@
+name:          liqlog-scotty
+version:       0.0.0
+cabal-version: >= 1.8
+build-type:    Simple
+
+executable          liqlog-scotty
+    hs-source-dirs: .
+    main-is:        Main.hs
+    ghc-options:    -Wall -threaded -O2 -rtsopts -with-rtsopts=-N
+    extensions:     OverloadedStrings
+    build-depends:  base   >= 4      && < 5
+                  , esqueleto
+                  , monad-logger >= 0.3.18
+                  , persistent
+                  , persistent-sqlite
+                  , persistent-template
+                  , resourcet >= 1.1.7.4
+                  , scotty >= 0.10.0 && < 0.11
+                  , text >= 1.2.2.1
+                  , time >= 1.5.0.1
+                  , transformers >= 0.4.2.0
