@@ -10,9 +10,9 @@
 
 import Web.Scotty as S
 import Control.Monad.IO.Class
---import Control.Monad (when)
+import Control.Monad
 
-import Database.Esqueleto
+import Database.Esqueleto ()
 import Database.Persist
 import Database.Persist.Sqlite
 import Database.Persist.TH
@@ -26,6 +26,10 @@ import Control.Monad.Logger
 share [mkPersist sqlSettings, mkMigrate "migrateAll"] [persistLowerCase|
 Beams
     title String
+    createdAt UTCTime
+    deriving Show
+Star
+    spent Bool
     createdAt UTCTime
     deriving Show
 |]
@@ -50,6 +54,54 @@ main = do
       _ <- liftIO $ saveBeam beam
       html $ mconcat ["<h1>Scotty, ", fromString beam, " me up!</h1>",
                      "<p>last three beams:", fromString beamList, "</p>"]
+
+    S.get "/stars/all" $ do
+      spent <- liftIO getSpentStars
+      unspent <- liftIO getUnspentStars
+      html $ mconcat ["<p>You have earned a total of ",
+                      fromString $ show (length spent + length unspent),
+                      " and have ",
+                      fromString $ show (length unspent),
+                      " to spend!</p>"]
+
+    S.get "/stars/reward/:numberEarned" $ do
+      numberEarned <- param "numberEarned"
+      _ <- liftIO $ earnStars numberEarned
+      redirect "/stars/all"
+
+    S.get "/stars/spend/:numberSpent" $ do
+      numberSpent <- param "numberSpent"
+      liftIO $ spendStars numberSpent
+      redirect "/stars/all"
+
+getSpentStars :: IO [Entity Star]
+getSpentStars = runDb $ selectList [StarSpent ==. True] []
+
+getUnspentStars :: IO [Entity Star]
+getUnspentStars = runDb $ selectList [StarSpent !=. True] []
+
+earnStars :: Int -> IO [Key Star]
+earnStars n = replicateM n createStar
+--pointful or pointfree?
+-- earnStars = (flip replicateM) createStar
+
+spendStars :: Int -> IO ()
+spendStars n = do
+  unspent <- getNUnspentStars n
+  mapM_ spendStar unspent
+
+getNUnspentStars :: Int -> IO [Entity Star]
+getNUnspentStars n = runDb $ selectList [StarSpent !=. True] [LimitTo n]
+
+spendStar :: Entity Star -> IO ()
+spendStar star = runDb $ update starId [StarSpent =. True]
+  where starId = entityKey star
+
+createStar :: IO (Key Star)
+createStar = do
+  now <- getCurrentTime
+  runDb $ insert $ Star False now
+
 
 getBeamList :: IO String
 getBeamList = htmlListify <$> getLastThreeBeamTitles
