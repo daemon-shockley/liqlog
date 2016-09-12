@@ -19,6 +19,7 @@ import Database.Persist.TH
 
 import Data.String
 import Data.Time
+import Data.Text.Lazy ()
 
 import Control.Monad.Trans.Resource (runResourceT, ResourceT)
 import Control.Monad.Logger
@@ -62,9 +63,13 @@ main = do
                       fromString $ show (length spent + length unspent),
                       " and have ",
                       fromString $ show (length unspent),
-                      " to spend!</p>"]
+                      " to spend!</p>",
+                      "<p>",
+                      mconcat $ map linkToEarnNStars [1..6],
+                      mconcat $ map linkToSpendNStars [1..6]
+                      ]
 
-    S.get "/stars/reward/:numberEarned" $ do
+    S.get "/stars/award/:numberEarned" $ do
       numberEarned <- param "numberEarned"
       _ <- liftIO $ earnStars numberEarned
       redirect "/stars/all"
@@ -73,6 +78,12 @@ main = do
       numberSpent <- param "numberSpent"
       liftIO $ spendStars numberSpent
       redirect "/stars/all"
+
+linkToEarnNStars :: (Data.String.IsString a, Monoid a) => Int -> a
+linkToEarnNStars n = mconcat $ ["<a href='/stars/award/", fromString (show n), "'>Award ", fromString (show n), " Star</a>"]
+
+linkToSpendNStars :: (Data.String.IsString a, Monoid a) => Int -> a
+linkToSpendNStars n = mconcat $ ["<a href='/stars/spend/", fromString (show n), "'>Spend ", fromString (show n), " Star</a>"]
 
 getSpentStars :: IO [Entity Star]
 getSpentStars = runDb $ selectList [StarSpent ==. True] []
