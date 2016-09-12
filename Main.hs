@@ -80,10 +80,10 @@ main = do
       redirect "/stars/all"
 
 linkToEarnNStars :: (Data.String.IsString a, Monoid a) => Int -> a
-linkToEarnNStars n = mconcat $ ["<a href='/stars/award/", fromString (show n), "'>Award ", fromString (show n), " Star</a>"]
+linkToEarnNStars n = mconcat $ ["<p><a href='/stars/award/", fromString (show n), "'>Award ", fromString (show n), " Star</a></p>"]
 
 linkToSpendNStars :: (Data.String.IsString a, Monoid a) => Int -> a
-linkToSpendNStars n = mconcat $ ["<a href='/stars/spend/", fromString (show n), "'>Spend ", fromString (show n), " Star</a>"]
+linkToSpendNStars n = mconcat $ ["<p><a href='/stars/spend/", fromString (show n), "'>Spend ", fromString (show n), " Star</a></p>"]
 
 getSpentStars :: IO [Entity Star]
 getSpentStars = runDb $ selectList [StarSpent ==. True] []
