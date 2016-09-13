@@ -65,8 +65,8 @@ main = do
                       fromString $ show (length unspent),
                       " to spend!</p>",
                       "<p>",
-                      mconcat $ map linkToEarnNStars [1..6],
-                      mconcat $ map linkToSpendNStars [1..6]
+                      htmlListify $ map linkToEarnNStars [1..6],
+                      htmlListify $ map linkToSpendNStars [1..6]
                       ]
 
     S.get "/stars/award/:numberEarned" $ do
@@ -80,10 +80,10 @@ main = do
       redirect "/stars/all"
 
 linkToEarnNStars :: (Data.String.IsString a, Monoid a) => Int -> a
-linkToEarnNStars n = mconcat $ ["<p><a href='/stars/award/", fromString (show n), "'>Award ", fromString (show n), " Star</a></p>"]
+linkToEarnNStars n = mconcat $ ["<a href='/stars/award/", fromString (show n), "'>Award ", fromString (show n), " Star</a>"]
 
 linkToSpendNStars :: (Data.String.IsString a, Monoid a) => Int -> a
-linkToSpendNStars n = mconcat $ ["<p><a href='/stars/spend/", fromString (show n), "'>Spend ", fromString (show n), " Star</a></p>"]
+linkToSpendNStars n = mconcat $ ["<a href='/stars/spend/", fromString (show n), "'>Spend ", fromString (show n), " Star</a>"]
 
 getSpentStars :: IO [Entity Star]
 getSpentStars = runDb $ selectList [StarSpent ==. True] []
