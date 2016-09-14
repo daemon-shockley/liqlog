@@ -14,7 +14,7 @@ import Control.Monad
 
 import Database.Esqueleto ()
 import Database.Persist
-import Database.Persist.Sqlite
+import Database.Persist.Sqlite as SQ
 import Database.Persist.TH
 
 import Data.String
@@ -83,6 +83,11 @@ main = do
     S.get "/stars/spend/:numberSpent" $ spendStarsController
     S.post "/stars/spend" $ spendStarsController
 
+    S.get "/stars/destroy/:numberDestroyed" $ do
+      numberDestroyed <- param "numberDestroyed"
+      liftIO $ deleteStars numberDestroyed
+      redirect "/stars/all"
+
 para :: (IsString a, Monoid a) => a -> a
 para s = mconcat ["<p>", s, "</p>"]
 
@@ -90,7 +95,7 @@ spendStarsController = do
   numberSpent <- param "numberSpent"
   liftIO $ spendStars numberSpent
   redirect "/stars/all"
-  
+
 earnStarsController = do
   numberEarned <- param "numberEarned"
   _ <- liftIO $ earnStars numberEarned
@@ -108,6 +113,8 @@ getSpentStars = runDb $ selectList [StarSpent ==. True] []
 getUnspentStars :: IO [Entity Star]
 getUnspentStars = runDb $ selectList [StarSpent !=. True] []
 
+getNOldestStars n = runDb $ selectList [] [LimitTo n, Asc StarCreatedAt]
+
 earnStars :: Int -> IO [Key Star]
 earnStars n = replicateM n createStar
 --pointful or pointfree?
@@ -117,6 +124,15 @@ spendStars :: Int -> IO ()
 spendStars n = do
   unspent <- getNUnspentStars n
   mapM_ spendStar unspent
+
+deleteStars :: Int -> IO ()
+deleteStars n = do
+  old <- getNOldestStars n
+  mapM_ deleteStar old
+
+deleteStar :: Entity Star -> IO ()
+deleteStar es = runDb $ SQ.delete starId
+  where starId = entityKey es
 
 getNUnspentStars :: Int -> IO [Entity Star]
 getNUnspentStars n = runDb $ selectList [StarSpent !=. True] [LimitTo n]
