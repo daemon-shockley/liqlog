@@ -65,19 +65,36 @@ main = do
                       fromString $ show (length unspent),
                       " to spend!</p>",
                       "<p>",
+                      "<form method='POST' action='/stars/award'>",
+                      para "Number To Award: <input type='text' name='numberEarned'>",
+                      para "<input type='submit' name='Award' value='Award'>",
+                      "</form>",
+                      "<form method='POST' action='/stars/spend'>",
+                      para "Number To Spend: <input type='text' name='numberSpent'>",
+                      para "<input type='submit' name='Spend' value='Spend'>",
+                      "</form>",
                       htmlListify $ map linkToEarnNStars [1..6],
                       htmlListify $ map linkToSpendNStars [1..6]
                       ]
 
-    S.get "/stars/award/:numberEarned" $ do
-      numberEarned <- param "numberEarned"
-      _ <- liftIO $ earnStars numberEarned
-      redirect "/stars/all"
+    S.get "/stars/award/:numberEarned" $ earnStarsController
+    S.post "/stars/award" $ earnStarsController
 
-    S.get "/stars/spend/:numberSpent" $ do
-      numberSpent <- param "numberSpent"
-      liftIO $ spendStars numberSpent
-      redirect "/stars/all"
+    S.get "/stars/spend/:numberSpent" $ spendStarsController
+    S.post "/stars/spend" $ spendStarsController
+
+para :: (IsString a, Monoid a) => a -> a
+para s = mconcat ["<p>", s, "</p>"]
+
+spendStarsController = do
+  numberSpent <- param "numberSpent"
+  liftIO $ spendStars numberSpent
+  redirect "/stars/all"
+  
+earnStarsController = do
+  numberEarned <- param "numberEarned"
+  _ <- liftIO $ earnStars numberEarned
+  redirect "/stars/all"
 
 linkToEarnNStars :: (Data.String.IsString a, Monoid a) => Int -> a
 linkToEarnNStars n = mconcat $ ["<a href='/stars/award/", fromString (show n), "'>Award ", fromString (show n), " Star</a>"]
