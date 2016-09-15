@@ -65,14 +65,8 @@ main = do
                       fromString $ show (length unspent),
                       " to spend!</p>",
                       "<p>",
-                      "<form method='POST' action='/stars/award'>",
-                      para "Number To Award: <input type='text' name='numberEarned'>",
-                      para "<input type='submit' name='Award' value='Award'>",
-                      "</form>",
-                      "<form method='POST' action='/stars/spend'>",
-                      para "Number To Spend: <input type='text' name='numberSpent'>",
-                      para "<input type='submit' name='Spend' value='Spend'>",
-                      "</form>",
+                      para $ simpleForm "/stars/award" "numberEarned" "Award",
+                      para $ simpleForm "/stars/spend" "numberSpent" "Spend",
                       htmlListify $ map linkToEarnNStars [1..6],
                       htmlListify $ map linkToSpendNStars [1..6]
                       ]
@@ -87,6 +81,22 @@ main = do
       numberDestroyed <- param "numberDestroyed"
       liftIO $ deleteStars numberDestroyed
       redirect "/stars/all"
+
+
+    --Main View 
+    S.get "/liqlog" $ undefined
+
+    --Create a drink type
+    S.post "/liqlog/drinkType" $ undefined
+
+    S.post "/liqlog/drink" $ undefined
+
+simpleForm action parameter submitText = mconcat $
+                                         ["<form method='POST' action='", action, "'>",
+                                          "<input type='submit' name='",
+                                          submitText, "' value='", submitText, "'>",
+                                          "<input type='text' name='", parameter, "'>",
+                                          "</form>"]
 
 para :: (IsString a, Monoid a) => a -> a
 para s = mconcat ["<p>", s, "</p>"]
@@ -113,6 +123,7 @@ getSpentStars = runDb $ selectList [StarSpent ==. True] []
 getUnspentStars :: IO [Entity Star]
 getUnspentStars = runDb $ selectList [StarSpent !=. True] []
 
+getNOldestStars :: Int -> IO [Entity Star]
 getNOldestStars n = runDb $ selectList [] [LimitTo n, Asc StarCreatedAt]
 
 earnStars :: Int -> IO [Key Star]
